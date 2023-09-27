@@ -49,23 +49,77 @@ router.get("/", (req, res) => {
  * Feature 7: Getting a specific starred restaurant.
  */
 
+router.get("/:id", (req, res) => {
+  const { id } = req.params;
 
+  // Find the restaurant with the matching id.
+  const restaurant = ALL_RESTAURANTS.find((restaurant) => restaurant.id === id);
+  const starredRestaurant = STARRED_RESTAURANTS.filter((restaurant) => restaurant.restaurantId === id);
+
+
+  // If the restaurant doesn't exist, let the client know.
+  if (!restaurant || !starredRestaurant.length === 0) {
+    res.sendStatus(404);
+    return;
+  }
+  restaurant.comment = starredRestaurant[0].comment
+  res.json(restaurant);
+});
 
 /**
  * Feature 8: Adding to your list of starred restaurants.
  */
 
+router.post("/", (req, res) => {
+  const { body } = req;
+  let { id, comment } = body;
 
+  // Generate a unique ID for the new restaurant.
+  const newStarredId = uuidv4();
+  if (comment === undefined) { comment = 'No comment given' }
+  const restaurant = ALL_RESTAURANTS.find((restaurant) => restaurant.id === id);
+
+  const newStarredRestaurant = {
+    id: newStarredId,
+    restaurantId: id,
+    name: restaurant.name,
+    comment: comment
+  }
+
+  // Add the new restaurant to the list of restaurants.
+  STARRED_RESTAURANTS.push(newStarredRestaurant)
+
+  res.json(newStarredRestaurant);
+});
 
 /**
  * Feature 9: Deleting from your list of starred restaurants.
  */
+router.delete("/:id", (req, res) => {
+  const { id } = req.params;
 
+  STARRED_RESTAURANTS = STARRED_RESTAURANTS.filter(r => r.id !== id)
+
+  res.json(STARRED_RESTAURANTS);
+});
 
 /**
  * Feature 10: Updating your comment of a starred restaurant.
  */
 
+router.put("/:id", (req, res) => {
+  const { id } = req.params;
+  const { newComment } = req.body;
 
+  let out = {}
+  for (let r of STARRED_RESTAURANTS) {
+    if (r.id === id) {
+      r.comment = newComment
+      out = {...r}
+    }
+  }
+
+  res.json(out);
+});
 
 module.exports = router;
